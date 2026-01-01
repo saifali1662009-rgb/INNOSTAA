@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.wav
+.env
+memory/
+*.log
+.DS_Store
+credentials.json
+
+# Piper binaries & models
+piper/
