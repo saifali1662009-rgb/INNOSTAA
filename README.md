@@ -27,4 +27,6 @@ It focuses on privacy, responsiveness, and smart user interaction.
 > Note: Piper TTS binaries and models must be downloaded separately.
 
 ## 📌 Author
-Built by a student developer as a learning-focused AI project.
+Built by a student developer as a learning-focused AI project. 
+- Saif Ali
+  (student and AI enthusiast)
