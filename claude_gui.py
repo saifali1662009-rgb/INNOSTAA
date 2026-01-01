@@ -18,7 +18,7 @@ class BackgroundParticles:
 
         self.count = 150
         self.particles = []
-        self.speed_multiplier = 0.4  # idle speed
+        self.speed_multiplier = 0.4  
 
         for _ in range(self.count):
             self.create_particle()
@@ -57,19 +57,16 @@ class BackgroundParticles:
             x += dx * self.speed_multiplier * 3.0
             y += dy * self.speed_multiplier * 3.0
 
-            # Wrap around screen
             if x < 0 or x > self.width or y < 0 or y > self.height:
                 x = random.randint(0, self.width)
                 y = random.randint(0, self.height)
 
-            # Avoid blob zone
             dist = math.dist((x, y), (self.cx, self.cy))
 
             if dist < self.safe_radius:
-                # Direction away from blob center
+                
                 angle = math.atan2(y - self.cy, x - self.cx)
-            
-                # Smooth deflection force
+   
                 repel_force = (self.safe_radius - dist) / self.safe_radius
             
                 dx += math.cos(angle) * repel_force * 0.8
@@ -95,19 +92,15 @@ class BlobAnimation:
     def get_points(self, dt):
         """Generate blob points"""
         self.time_offset += dt
-        
-        # Smooth radius transition
+    
         self.current_radius += (self.target_radius - self.current_radius) * 0.1
         
-        # Generate blob points
         points = []
         for i in range(self.points):
             angle = (i / self.points) * 2 * math.pi
             
-            # Base noise for organic movement
             noise = math.sin(self.time_offset * 2 + self.noise_offsets[i]) * 15
-            
-            # Additional pulsing when speaking/listening
+   
             if self.is_speaking:
                 noise += math.sin(self.time_offset * 8) * 25
             elif self.is_listening:
@@ -141,26 +134,23 @@ class InnostaaGUI:
         self.root = root
         self.root.title("Innostaa")
         self.root.geometry("1200x800")
-        self.root.configure(bg="#0A1628")   #E8E4DC
+        self.root.configure(bg="#0A1628")  
         
         # Colors from reference
-        self.bg_color = "#0A1628"           # Dark blue background (was "#E8E4DC")
-        self.dark_color = "#E8E8E8"         # Light text (was "#2C2C2C")
-        self.accent_color = "#A0AEC0"       # Light gray for secondary text (was "#4A4A4A")
-        self.blob_color = "#1E3A5F"         # Darker blue blob (was "#B8C5D6")
-        self.blob_shadow = "#5A5BB0A1"        # Darker shadow (was "#8A9AAA")
-        self.blob_core_color = "#264C7A"    # Dark blue core (add this new one)
+        self.bg_color = "#0A1628"           # Dark blue background 
+        self.dark_color = "#E8E8E8"         # Light text 
+        self.accent_color = "#A0AEC0"       # Light gray for secondary text 
+        self.blob_color = "#1E3A5F"         # Darker blue blob
+        self.blob_shadow = "#5A5BB0A1"        # Darker shadow 
+        self.blob_core_color = "#264C7A"    # Dark blue core
         
-        # State variables
         self.current_state = "idle"
         self.mic_active = False
         self.current_subtitle = ""
         self.active_gesture = None
-        
-        # Communication queues
+      
         self.status_queue = queue.Queue()
-        
-        # Initialize blob as None
+      
         self.blob = None
         self.blob_shadow = None
         self.blob_shape = None
@@ -168,8 +158,7 @@ class InnostaaGUI:
         self.particles = None
         
         self.setup_ui()
-        
-        # Initialize blob after UI is ready
+    
         self.root.after(100, self.initialize_blob)
 
     def update_mouse_frame(self, frame):
@@ -177,8 +166,8 @@ class InnostaaGUI:
             return
     
         if self.active_gesture is None:
-            return   # ⛔ DO NOTHING
-    
+            return   
+            
         def _update():
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             img = Image.fromarray(rgb)
@@ -195,12 +184,11 @@ class InnostaaGUI:
         
     def setup_ui(self):
         """Setup the user interface"""
-        # Header
+        
         header_frame = tk.Frame(self.root, bg=self.bg_color, height=80)
         header_frame.pack(fill=tk.X, padx=40, pady=(20, 0))
         header_frame.pack_propagate(False)
-        
-        # Logo/Title
+    
         title_label = tk.Label(
             header_frame, 
             text="Innostaa",
@@ -209,8 +197,7 @@ class InnostaaGUI:
             fg=self.dark_color
         )
         title_label.pack(side=tk.LEFT, pady=20)
-        
-        # Status indicator
+     
         self.status_label = tk.Label(
             header_frame,
             text="● READY",
@@ -219,12 +206,10 @@ class InnostaaGUI:
             fg=self.accent_color
         )
         self.status_label.pack(side=tk.RIGHT, pady=20)
-        
-        # Main canvas for blob
+       
         main_frame = tk.Frame(self.root, bg=self.bg_color)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # LEFT: Blob area
         self.canvas = tk.Canvas(
             main_frame,
             bg=self.bg_color,
@@ -232,7 +217,6 @@ class InnostaaGUI:
         )
         self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
-        # RIGHT: Virtual mouse area
         self.mouse_frame = tk.Frame(
             main_frame,
             width=400,
@@ -252,11 +236,9 @@ class InnostaaGUI:
         )
         self.mouse_label.pack(expand=True)        
         self.canvas.bind('<Configure>', self.on_window_resize)
-        
-        # Subtitle area
+
         subtitle_frame = tk.Frame(self.root, bg=self.bg_color, height=100)
         subtitle_frame.pack(fill=tk.BOTH, expand=False, padx = 40, pady=(0,10))
-        #subtitle_frame.pack_propagate(False)
         
         self.subtitle_label = tk.Label(
             subtitle_frame,
@@ -268,13 +250,11 @@ class InnostaaGUI:
             justify=tk.CENTER
         )
         self.subtitle_label.pack(expand=True)
-        
-        # Footer with microphone indicator
+       
         footer_frame = tk.Frame(self.root, bg=self.bg_color, height=80)
         footer_frame.pack(fill=tk.X, padx=40, pady=(0, 20))
         footer_frame.pack_propagate(False)
-        
-        # Microphone status container
+    
         mic_container = tk.Frame(footer_frame, bg=self.bg_color)
         mic_container.pack(expand=True)
         
@@ -322,24 +302,22 @@ class InnostaaGUI:
             
     def initialize_blob(self):
         """Initialize blob after canvas is properly sized"""
-        # Force update to get actual canvas size
+     
         self.canvas.update()
         
-        # Get actual canvas dimensions
+   
         canvas_width = self.canvas.winfo_width()
         canvas_height = self.canvas.winfo_height()
         
-        # Calculate true center
+    
         center_x = canvas_width // 2
         center_y = canvas_height // 2
         
         print(f"Canvas size: {canvas_width}x{canvas_height}")
         print(f"Blob center: ({center_x}, {center_y})")
         
-        # Create blob at true center
         self.blob = BlobAnimation(self.canvas, center_x, center_y)
-        
-        # Create initial points for blob
+
         initial_points = self.blob.get_points(0)
 
         self.particles = BackgroundParticles(
@@ -349,8 +327,7 @@ class InnostaaGUI:
             (center_x, center_y),
             self.blob.base_radius
         )
-        
-        # Create blob elements with initial points
+     
         self.blob_shadow = self.canvas.create_polygon(
             initial_points, 
             fill=self.blob_shadow, 
@@ -364,8 +341,7 @@ class InnostaaGUI:
             outline="", 
             smooth=True
         )
-        
-        # Core circle
+
         core_radius = 40
         self.blob_core = self.canvas.create_oval(
             center_x - core_radius,
@@ -375,7 +351,7 @@ class InnostaaGUI:
             fill="#B5BCC8",
             outline=""
         )        
-        # Start animation
+      
         self.start_animation()
         
     def start_animation(self):
@@ -389,31 +365,26 @@ class InnostaaGUI:
             self.particles.update()
 
         if self.blob is None:
-            # Not initialized yet, try again later
+       
             self.root.after(33, self.animate)
             return
         
         current_time = time.time()
         dt = current_time - self.last_time
         self.last_time = current_time
-        
-        # Update blob
+    
         points = self.blob.get_points(dt)
         
-        # Update canvas elements
-        if len(points) >= 6:  # Need at least 3 points (6 coordinates)
+    
+        if len(points) >= 6: 
             self.canvas.coords(self.blob_shape, *points)
             
-            # Update shadow (slightly offset)
             shadow_points = []
             for i in range(0, len(points), 2):
                 shadow_points.extend([points[i] + 8, points[i+1] + 8])
             self.canvas.coords(self.blob_shadow, *shadow_points)
-            
-            # Lower shadow in stacking order
             self.canvas.tag_lower(self.blob_shadow)
         
-        # Update core circle
         core_radius = 40
         self.canvas.coords(
             self.blob_core,
@@ -423,7 +394,6 @@ class InnostaaGUI:
             self.blob.center_y + core_radius
         )
         
-        # Check for status updates
         try:
             while True:
                 status = self.status_queue.get_nowait()
@@ -431,7 +401,6 @@ class InnostaaGUI:
         except queue.Empty:
             pass
         
-        # Continue animation
         self.root.after(33, self.animate)  # ~30 FPS
 
     def set_gesture_state(self, feature_name=None):
@@ -454,27 +423,23 @@ class InnostaaGUI:
         state = status_dict.get('state', 'idle')
         subtitle = status_dict.get('subtitle', '')
         mic_active = status_dict.get('mic_active', False)
-        
-        # Update blob state
+       
         if state != self.current_state:
             self.current_state = state
             if self.blob:
                 self.blob.set_state(state)
-            
-            # Update status label
+          
             if state == 'listening':
                 self.status_label.config(text="● LISTENING", fg="#4CAF50")
             elif state == 'speaking':
                 self.status_label.config(text="● SPEAKING", fg="#2196F3")
             else:
                 self.status_label.config(text="● READY", fg=self.accent_color)
-        
-        # Update subtitle
+   
         if subtitle != self.current_subtitle:
             self.current_subtitle = subtitle
             self.subtitle_label.config(text=subtitle)
-        
-        # Update microphone indicator
+       
         if mic_active != self.mic_active:
             self.mic_active = mic_active
             if mic_active:
@@ -492,8 +457,7 @@ class InnostaaGUI:
         
             if self.particles:
                 self.particles.set_state(state)
-        
-    
+                
     def send_status(self, state, subtitle="", mic_active=False):
         """Send status update to GUI"""
         self.status_queue.put({
@@ -508,7 +472,7 @@ class InnostaaWithGUI:
         self.gui = InnostaaGUI(self.root)
 
     def start_gui(self):
-        pass  # GUI already created
+        pass 
 
     def mainloop(self):
         self.root.mainloop()
@@ -521,32 +485,6 @@ class InnostaaWithGUI:
         if self.gui:
             self.gui.set_gesture_state(feature_name)
         
-# Integration wrapper
-#class InnostaaWithGUI:
-    #def __init__(self):
-    #    self.gui = None
-    #    self.gui_thread = None
-    #    
-    #def start_gui(self):
-    #    """Start GUI in separate thread"""
-    #    def run_gui():
-    #        root = tk.Tk()
-    #        self.gui = InnostaaGUI(root)
-    #        root.mainloop()
-    #    
-    #    self.gui_thread = threading.Thread(target=run_gui, daemon=True)
-    #    self.gui_thread.start()
-    #    
-    #    # Wait for GUI to initialize
-    #    time.sleep(2)
-    #
-    #def update_status(self, state, subtitle="", mic_active=False):
-    #    """Update GUI status"""
-    #    if self.gui:
-    #        self.gui.send_status(state, subtitle, mic_active)
-
-
-# Demo
 if __name__ == "__main__":
     root = tk.Tk()
     gui = InnostaaGUI(root)
