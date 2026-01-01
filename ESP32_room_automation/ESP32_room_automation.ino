@@ -1,7 +1,7 @@
 #include <WiFi.h>
 
-const char* ssid = "Harshit";
-const char* password = "12345678";
+const char* ssid = "---------";  //wifi name
+const char* password = "---------"; // password
 
 WiFiServer server(80);
 
@@ -34,19 +34,16 @@ void loop() {
   String req = client.readStringUntil('\r');
   client.flush();
 
-  // TURN LIGHT ON
   if (req.indexOf("/light/on") != -1) {
     digitalWrite(ledPin, HIGH);
     Serial.println("Light ON");
   }
 
-  // TURN LIGHT OFF
   else if (req.indexOf("/light/off") != -1) {
     digitalWrite(ledPin, LOW);
     Serial.println("Light OFF");
   }
 
-  // PING CHECK
   else if (req.indexOf("/ping") != -1) {
     Serial.println("Ping received");
     client.println("HTTP/1.1 200 OK");
@@ -58,7 +55,6 @@ void loop() {
     return;
   }
 
-  // DEFAULT RESPONSE
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");
   client.println("Connection: close");
