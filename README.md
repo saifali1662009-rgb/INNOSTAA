@@ -104,13 +104,13 @@ pip install -r requirements.txt
 
 ```env
 GROQ_API_KEY=YOUR_KEY
-NVIDIA_API_KEY=YOUR_KEY
+NEMOTRON=YOUR_KEY
 ```
 
 4. Run the project
 
 ```bash
-python main.py
+python run.py
 ```
 
 ---
