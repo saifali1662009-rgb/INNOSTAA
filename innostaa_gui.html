@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>INNOSTAA</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  /* ── Warm charcoal / graphite / ebony palette ── */
+  --bg:          #0D0C0B;   /* ebony warm */
+  --bg-deep:     #090807;   /* deepest ebony */
+  --graphite:    #161412;   /* graphite surface */
+  --charcoal:    #1C1A17;   /* charcoal raised */
+
+  /* Gold — branding & key actions only */
+  --gold:        #E8C97A;
+  --gold-soft:   rgba(232,201,122,0.50);
+  --gold-dim:    rgba(232,201,122,0.18);
+  --gold-mist:   rgba(232,201,122,0.07);
+  --gold-line:   rgba(232,201,122,0.22);
+
+  /* Neutral glass edges — no gold borders on cards */
+  --edge:        rgba(255,255,255,0.065);   /* soft frosted edge */
+  --edge-raised: rgba(255,255,255,0.095);   /* slightly brighter for hover */
+  --edge-inset:  rgba(0,0,0,0.25);
+
+  /* Text */
+  --text:        #EEE9E0;
+  --text-mid:    rgba(238,233,224,0.58);
+  --text-low:    rgba(238,233,224,0.34);
+  --text-dim:    rgba(238,233,224,0.18);
+
+  /* Surfaces */
+  --surf:        rgba(255,255,255,0.030);
+  --surf-hover:  rgba(255,255,255,0.052);
+  --surf-deep:   rgba(0,0,0,0.18);
+
+  --danger:  #B85C48;
+  --success: #7A9E6A;
+
+  --ribbon-w:   54px;
+  --ribbon-ex:  220px;
+}
+
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden;user-select:none;}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:99px;}
+
+/* ════════════════════════════════════════
+   CANVAS + SUBTLE GRID
+════════════════════════════════════════ */
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+/* Very faint warm grid */
+.grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,248,230,0.012) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,248,230,0.012) 1px,transparent 1px);
+  background-size:72px 72px;
+}
+
+/* ════════════════════════════════════════
+   LIQUID GLASS — website-matched style
+   Soft frosted surfaces, no gold borders
+════════════════════════════════════════ */
+.glass{
+  background:
+    linear-gradient(158deg,
+      rgba(255,255,255,0.048) 0%,
+      rgba(255,255,255,0.014) 50%,
+      rgba(255,255,255,0.028) 100%);
+  backdrop-filter:blur(72px) saturate(160%) brightness(1.03);
+  -webkit-backdrop-filter:blur(72px) saturate(160%) brightness(1.03);
+  border:1px solid var(--edge);
+  position:relative;overflow:hidden;
+}
+/* Frosted top highlight — like the website nav capsule */
+.glass::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,
+    transparent 8%,
+    rgba(255,255,255,0.08) 25%,
+    rgba(255,255,255,0.14) 50%,
+    rgba(255,255,255,0.08) 75%,
+    transparent 92%);
+  pointer-events:none;z-index:1;
+}
+/* Inset bottom shadow for depth */
+.glass::before{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,0,0,0.15),transparent);
+  pointer-events:none;z-index:1;
+}
+
+/* Shimmer — only on conversation panel */
+.glass-shimmer{overflow:hidden;}
+.glass-shimmer .shimmer-sweep{
+  position:absolute;top:0;left:-80%;width:40%;height:100%;
+  background:linear-gradient(108deg,transparent,rgba(255,255,255,0.025),transparent);
+  animation:sweep 10s ease-in-out infinite;pointer-events:none;z-index:2;
+}
+@keyframes sweep{0%{left:-80%;opacity:0}6%{opacity:1}58%{left:125%;opacity:.5}100%{left:125%;opacity:0}}
+
+/* ════════════════════════════════════════
+   SPLASH
+════════════════════════════════════════ */
+#splash{
+  position:fixed;inset:0;z-index:9999;background:var(--bg-deep);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  transition:opacity 1s ease;
+}
+#splash.hidden{opacity:0;pointer-events:none;}
+.splash-logo{
+  font-family:'Cormorant Garamond',serif;font-weight:300;
+  font-size:58px;letter-spacing:18px;text-transform:uppercase;
+  background:linear-gradient(170deg,#fff 0%,var(--gold) 52%,rgba(232,201,122,.45) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.splash-sub{
+  font-size:9px;letter-spacing:5.5px;text-transform:uppercase;
+  color:var(--text-dim);font-family:'Syne',sans-serif;margin-top:2px;
+}
+.splash-bar-wrap{width:160px;height:1px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;margin-top:10px;}
+.splash-bar{height:100%;width:0%;background:linear-gradient(90deg,rgba(232,201,122,.3),var(--gold));border-radius:99px;transition:width .4s ease;}
+.splash-tip{font-size:12px;color:var(--text-low);font-style:italic;text-align:center;max-width:300px;line-height:1.7;min-height:34px;animation:tipIn .5s ease;}
+@keyframes tipIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ════════════════════════════════════════
+   SIDEBAR / RIBBON
+   Gold accent only on the right border line
+════════════════════════════════════════ */
+.ribbon{
+  position:fixed;left:0;top:0;bottom:0;width:var(--ribbon-w);z-index:100;
+  background:linear-gradient(180deg,rgba(14,13,11,.97) 0%,rgba(11,10,8,.99) 100%);
+  backdrop-filter:blur(60px);-webkit-backdrop-filter:blur(60px);
+  border-right:1px solid var(--edge);
+  display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:2px;
+  transition:width .3s cubic-bezier(.4,0,.2,1);overflow:hidden;
+}
+/* Gold accent — only the right border gradient */
+.ribbon::after{
+  content:'';position:absolute;top:0;right:0;width:1px;height:100%;
+  background:linear-gradient(to bottom,
+    transparent 5%,
+    var(--gold-line) 28%,
+    var(--gold-dim) 55%,
+    var(--gold-line) 78%,
+    transparent 95%);
+  pointer-events:none;
+}
+.ribbon.expanded{width:var(--ribbon-ex);align-items:flex-start;}
+.ribbon-logo-btn{
+  width:34px;height:34px;border-radius:10px;
+  border:1px solid var(--edge);background:var(--surf);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin:0 10px 10px;color:var(--text-dim);transition:all .22s;
+}
+.ribbon-logo-btn:hover{background:var(--surf-hover);color:var(--text-low);}
+.ribbon-logo-btn svg{width:15px;height:15px;}
+.ribbon-divider{
+  width:calc(100% - 20px);height:1px;margin:4px 10px;flex-shrink:0;
+  background:linear-gradient(90deg,transparent,var(--edge),transparent);
+}
+.ribbon-item{
+  display:flex;align-items:center;gap:12px;padding:9px 10px;
+  border-radius:9px;cursor:pointer;color:var(--text-dim);
+  transition:all .2s;white-space:nowrap;overflow:hidden;flex-shrink:0;
+  margin:1px 8px;width:calc(100% - 16px);border:1px solid transparent;
+}
+.ribbon-item:hover{background:var(--surf-hover);color:var(--text-low);border-color:var(--edge);}
+.ribbon-item svg{width:15px;height:15px;flex-shrink:0;}
+.ribbon-label{font-size:12px;font-family:'Syne',sans-serif;font-weight:500;letter-spacing:.7px;opacity:0;transition:opacity .2s;}
+.ribbon.expanded .ribbon-label{opacity:1;}
+
+/* ════════════════════════════════════════
+   MODAL PANELS — warm graphite, soft edges
+════════════════════════════════════════ */
+.panel-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(10px);
+  display:none;align-items:center;justify-content:center;
+}
+.panel-overlay.open{display:flex;}
+.panel{
+  background:linear-gradient(158deg,rgba(20,18,15,.97) 0%,rgba(14,13,11,.99) 100%);
+  border:1px solid var(--edge);border-radius:22px;
+  width:520px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 48px 100px rgba(0,0,0,.72),0 0 0 1px rgba(255,255,255,.03),inset 0 1px 0 rgba(255,255,255,.06);
+  animation:panelIn .24s cubic-bezier(.34,1.4,.64,1);position:relative;
+}
+/* Single gold accent only on the top edge — branding */
+.panel::after{
+  content:'';position:absolute;top:0;left:20%;right:20%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold-line),transparent);
+  pointer-events:none;z-index:2;
+}
+@keyframes panelIn{from{opacity:0;transform:scale(.95)translateY(12px)}to{opacity:1;transform:scale(1)translateY(0)}}
+.panel-header{padding:20px 24px 16px;border-bottom:1px solid var(--edge);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.panel-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:.6px;color:var(--text);}
+.panel-close{width:24px;height:24px;border-radius:6px;border:1px solid var(--edge);background:var(--surf);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-low);font-size:12px;transition:all .18s;}
+.panel-close:hover{background:rgba(184,92,72,.12);border-color:rgba(184,92,72,.4);color:var(--danger);}
+.panel-body{padding:20px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:15px;}
+.panel-footer{display:flex;gap:9px;justify-content:flex-end;flex-shrink:0;padding:14px 24px 20px;border-top:1px solid var(--edge);}
+.panel-btn{padding:8px 18px;border-radius:9px;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;transition:all .2s;}
+.panel-btn.primary{background:linear-gradient(135deg,var(--gold),rgba(232,201,122,.72));color:#0D0C0B;}
+.panel-btn.primary:hover{box-shadow:0 4px 18px var(--gold-dim);transform:translateY(-1px);}
+.panel-btn.secondary{background:var(--surf);border:1px solid var(--edge);color:var(--text-mid);}
+.panel-btn.secondary:hover{background:var(--surf-hover);color:var(--text);}
+.save-status{font-size:10px;color:var(--gold);align-self:center;margin-right:auto;opacity:0;transition:opacity .3s;font-family:'Syne',sans-serif;letter-spacing:.5px;}
+.save-status.show{opacity:1;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-label{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);font-family:'Syne',sans-serif;}
+.form-input-wrap{position:relative;}
+.form-input{width:100%;background:rgba(255,255,255,.022);border:1px solid var(--edge);border-radius:9px;padding:10px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .18s;user-select:text;}
+.form-input:focus{border-color:rgba(255,255,255,.14);box-shadow:0 0 0 3px rgba(255,255,255,.03);}
+.memory-textarea{width:100%;min-height:260px;background:rgba(255,255,255,.018);border:1px solid var(--edge);border-radius:10px;padding:13px 15px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.75;resize:vertical;outline:none;transition:border-color .18s;user-select:text;}
+.memory-textarea:focus{border-color:rgba(255,255,255,.14);}
+.eye-btn{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim);padding:4px;transition:color .18s;}
+.eye-btn:hover{color:var(--text-mid);}
+.eye-btn svg{width:14px;height:14px;}
+.iot-tab{padding:6px 12px;border-radius:7px;border:1px solid var(--edge);background:var(--surf);color:var(--text-dim);font-family:'Syne',sans-serif;font-size:9px;font-weight:700;cursor:pointer;letter-spacing:.7px;text-transform:uppercase;transition:all .18s;}
+.iot-tab:hover{background:var(--surf-hover);color:var(--text-low);}
+.iot-tab.active{border-color:rgba(255,255,255,.12);color:var(--text);background:rgba(255,255,255,.045);}
+
+/* ════════════════════════════════════════
+   MAIN APP GRID
+════════════════════════════════════════ */
+.app{
+  position:relative;z-index:1;
+  width:100vw;height:100vh;
+  display:grid;
+  grid-template-rows:52px 1fr auto;
+  grid-template-columns:1fr 344px;
+  grid-template-areas:
+    "header header"
+    "main   panel"
+    "footer footer";
+  padding:14px 16px 14px calc(var(--ribbon-w) + 18px);
+  gap:10px;
+  transition:padding-left .3s cubic-bezier(.4,0,.2,1);
+}
+.app.ribbon-open{padding-left:calc(var(--ribbon-ex) + 18px);}
+
+/* ── HEADER ── */
+header{
+  grid-area:header;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2px;
+}
+.logo-group{display:flex;align-items:center;gap:12px;}
+.logo{
+  font-family:'Cormorant Garamond',serif;font-weight:300;
+  font-size:26px;letter-spacing:9px;text-transform:uppercase;
+  background:linear-gradient(168deg,#fff 0%,var(--gold) 58%,rgba(232,201,122,.6) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  position:relative;
+}
+/* Thin gold underline — branding accent */
+.logo::after{content:'';position:absolute;bottom:-3px;left:0;width:100%;height:1px;background:linear-gradient(90deg,var(--gold-soft),transparent);opacity:.4;}
+.tagline{font-size:8px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;font-family:'Syne',sans-serif;}
+/* AI presence orb */
+.ai-pulse{
+  width:4px;height:4px;border-radius:50%;
+  background:var(--gold-dim);flex-shrink:0;
+  animation:aiPulse 3.8s ease-in-out infinite;
+}
+@keyframes aiPulse{0%,100%{opacity:.25;transform:scale(1)}50%{opacity:.75;transform:scale(1.4)}}
+.header-right{display:flex;align-items:center;gap:12px;}
+
+/* ════════════════════════════════════════
+   CONVERSATION PANEL
+   Neutral glass edges, no gold border
+════════════════════════════════════════ */
+main{grid-area:main;overflow:hidden;display:flex;flex-direction:column;}
+
+.convo-panel{
+  flex:1;border-radius:18px;
+  padding:17px 22px 14px;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.convo-label{
+  font-size:7.5px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--text-dim);font-family:'Syne',sans-serif;
+  margin-bottom:10px;flex-shrink:0;
+}
+.conversation-log{
+  flex:1;overflow-y:auto;
+  display:flex;flex-direction:column;gap:16px;
+  padding-right:5px;
+}
+.message{display:flex;flex-direction:column;gap:4px;animation:msgIn .28s ease forwards;position:relative;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.message-role{font-size:7.5px;letter-spacing:2.5px;text-transform:uppercase;font-family:'Syne',sans-serif;}
+.message-role.user{color:rgba(232,201,122,.50);}
+.message-role.assistant{color:rgba(255,255,255,.22);}
+.message-text{font-size:14px;line-height:1.76;color:var(--text);font-weight:300;}
+.message-text.user-text{color:var(--text-mid);font-size:13.5px;}
+
+/* Copy button — appears on message hover */
+.msg-copy-btn{
+  position:absolute;top:0;right:0;
+  width:26px;height:26px;border-radius:7px;
+  border:1px solid var(--edge);
+  background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-dim);
+  opacity:0;pointer-events:none;
+  transition:opacity .18s ease,transform .18s ease,color .15s,background .15s;
+  transform:translateY(-2px);
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+.message:hover .msg-copy-btn{
+  opacity:1;pointer-events:auto;transform:translateY(0);
+}
+.msg-copy-btn:hover{
+  color:var(--gold);
+  background:linear-gradient(145deg,rgba(232,201,122,.10),rgba(232,201,122,.04));
+  border-color:var(--gold-dim);
+}
+.msg-copy-btn svg{width:12px;height:12px;flex-shrink:0;}
+/* Copied state */
+.msg-copy-btn.copied{
+  color:var(--success);
+  border-color:rgba(122,158,106,.35);
+  background:rgba(122,158,106,.08);
+  pointer-events:none;
+}
+.typing-indicator{display:none;align-items:center;gap:5px;padding:5px 0;}
+.typing-indicator.active{display:flex;}
+.typing-dot{width:3.5px;height:3.5px;border-radius:50%;background:var(--text-dim);animation:tdot 1.4s ease-in-out infinite;}
+.typing-dot:nth-child(2){animation-delay:.18s}.typing-dot:nth-child(3){animation-delay:.36s}
+@keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.25}30%{transform:translateY(-5px);opacity:.8}}
+
+/* ════════════════════════════════════════
+   RIGHT PANEL — Vision Feed + Stats
+════════════════════════════════════════ */
+.right-panel{grid-area:panel;display:flex;flex-direction:column;gap:9px;}
+
+/* Vision Feed — neutral glass, no gold border */
+.vision-panel{
+  flex:1;border-radius:16px;overflow:hidden;position:relative;
+  background:linear-gradient(158deg,rgba(255,255,255,.038) 0%,rgba(18,16,14,.88) 55%,rgba(255,255,255,.022) 100%);
+  backdrop-filter:blur(72px) saturate(140%);
+  -webkit-backdrop-filter:blur(72px) saturate(140%);
+  border:1px solid var(--edge);
+  box-shadow:0 20px 50px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);
+}
+.vision-panel::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 10%,rgba(255,255,255,.1) 40%,rgba(255,255,255,.1) 60%,transparent 90%);
+  pointer-events:none;z-index:2;
+}
+.vision-header{
+  position:absolute;top:0;left:0;right:0;padding:12px 15px;
+  display:flex;align-items:center;justify-content:space-between;
+  z-index:3;background:linear-gradient(to bottom,rgba(9,8,7,.65),transparent);
+}
+.vision-title{font-size:7.5px;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);font-family:'Syne',sans-serif;}
+.live-badge{
+  display:none;align-items:center;gap:4px;
+  padding:2px 8px;background:rgba(184,92,72,.08);border:1px solid rgba(184,92,72,.22);
+  border-radius:99px;font-size:7.5px;color:var(--danger);
+  letter-spacing:1.5px;font-family:'Syne',sans-serif;
+}
+.live-badge.active{display:flex;}
+.live-badge-dot{width:4px;height:4px;border-radius:50%;background:var(--danger);animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.vision-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.vision-eye{
+  width:56px;height:56px;border-radius:50%;
+  border:1px solid var(--edge);
+  background:radial-gradient(circle at 40% 38%,rgba(255,255,255,.04),transparent 65%);
+  display:flex;align-items:center;justify-content:center;position:relative;
+}
+.vision-eye::before{
+  content:'';position:absolute;inset:-9px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.06);
+  animation:breathe 4.5s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.04);opacity:.6}}
+.vision-eye svg{color:var(--text-dim);opacity:.6;}
+.vision-ph-text{font-size:10.5px;color:var(--text-dim);text-align:center;line-height:1.65;max-width:150px;}
+#videoFeed{width:100%;height:100%;object-fit:cover;display:none;border-radius:16px;}
+#videoFeed.active{display:block;}
+
+/* Stat cards — neutral glass */
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0;}
+.stat-card{
+  border-radius:12px;padding:11px 13px;display:flex;flex-direction:column;gap:2px;
+  background:linear-gradient(158deg,rgba(255,255,255,.036) 0%,rgba(255,255,255,.010) 100%);
+  backdrop-filter:blur(50px);-webkit-backdrop-filter:blur(50px);
+  border:1px solid var(--edge);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+.stat-label{font-size:7px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);font-family:'Syne',sans-serif;}
+/* Gold on stat value — it's a key element */
+.stat-value{font-size:16px;font-weight:600;font-family:'Syne',sans-serif;color:var(--gold);}
+
+/* ════════════════════════════════════════
+   FOOTER — UNIFIED INPUT CAPSULE
+   [  text input    ——  send  mic  ]  [toolbar]
+════════════════════════════════════════ */
+footer{
+  grid-area:footer;
+  display:flex;align-items:center;gap:9px;
+  padding:0 2px;
+}
+
+.input-capsule{
+  flex:1;
+  display:flex;align-items:center;
+  border-radius:14px;
+  padding:6px 5px 6px 17px;
+  /* Neutral liquid glass — matches website nav capsule */
+  background:
+    linear-gradient(158deg,
+      rgba(255,255,255,0.052) 0%,
+      rgba(255,255,255,0.016) 45%,
+      rgba(255,255,255,0.030) 100%);
+  backdrop-filter:blur(72px) saturate(180%) brightness(1.04);
+  -webkit-backdrop-filter:blur(72px) saturate(180%) brightness(1.04);
+  border:1px solid var(--edge);
+  box-shadow:
+    0 6px 28px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 -1px 0 rgba(0,0,0,.08);
+  transition:border-color .2s,box-shadow .2s;
+  position:relative;overflow:hidden;
+}
+.input-capsule::after{
+  content:'';position:absolute;top:0;left:8%;right:8%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+  pointer-events:none;z-index:1;
+}
+.input-capsule:focus-within{
+  border-color:rgba(255,255,255,.11);
+  box-shadow:0 6px 28px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.04),inset 0 1px 0 rgba(255,255,255,.11);
+}
+.text-input{
+  flex:1;background:transparent;border:none;
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;
+  outline:none;padding:7px 0;line-height:1;
+}
+.text-input::placeholder{color:var(--text-dim);}
+
+.capsule-divider{
+  width:1px;height:20px;
+  background:linear-gradient(to bottom,transparent,var(--edge),transparent);
+  margin:0 8px;flex-shrink:0;
+}
+
+/* Send — gold fill, this is a key action */
+.send-btn{
+  width:32px;height:32px;border-radius:8px;border:none;
+  background:linear-gradient(138deg,var(--gold),rgba(232,201,122,.68));
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .2s;
+}
+.send-btn:hover{box-shadow:0 3px 12px var(--gold-dim);transform:translateY(-1px);}
+.send-btn:active{transform:translateY(0);box-shadow:none;}
+.send-btn svg{color:#0D0C0B;}
+
+/* Mic — flush, transparent when off */
+.mic-btn{
+  width:38px;height:38px;border-radius:9px;border:1px solid transparent;
+  background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-left:1px;color:var(--text-dim);transition:all .24s;
+}
+.mic-btn.off:hover{background:var(--surf);color:var(--text-low);}
+.mic-btn.on{
+  color:var(--gold);border-color:var(--gold-dim);
+  background:linear-gradient(145deg,rgba(232,201,122,.09),rgba(232,201,122,.03));
+  animation:micGlow 2.6s ease-in-out infinite;
+}
+@keyframes micGlow{0%,100%{box-shadow:none}50%{box-shadow:0 0 10px rgba(232,201,122,.15)}}
+.mic-btn.speaking{
+  color:var(--gold);border-color:rgba(232,201,122,.45);
+  background:linear-gradient(145deg,rgba(232,201,122,.14),rgba(232,201,122,.04));
+  animation:micSpeak .75s ease-in-out infinite;
+}
+@keyframes micSpeak{0%,100%{box-shadow:0 0 3px rgba(232,201,122,.1)}50%{box-shadow:0 0 14px rgba(232,201,122,.22)}}
+.mic-btn svg{width:16px;height:16px;}
+
+.mic-state{
+  font-size:7.5px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--text-dim);font-family:'Syne',sans-serif;
+  white-space:nowrap;flex-shrink:0;margin-left:1px;margin-right:3px;transition:color .25s;
+}
+.mic-state.on{color:rgba(232,201,122,.48);}
+.mic-state.speaking{color:var(--gold-soft);}
+
+/* Feature toolbar — neutral glass strip, no gold border */
+.feature-toolbar{
+  display:flex;align-items:center;border-radius:12px;overflow:hidden;flex-shrink:0;
+  background:
+    linear-gradient(158deg,rgba(255,255,255,.044) 0%,rgba(255,255,255,.012) 100%);
+  backdrop-filter:blur(60px) saturate(160%);
+  -webkit-backdrop-filter:blur(60px) saturate(160%);
+  border:1px solid var(--edge);
+  box-shadow:0 4px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);
+  position:relative;
+}
+.feature-toolbar::after{
+  content:'';position:absolute;top:0;left:8%;right:8%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);
+  pointer-events:none;
+}
+.icon-btn{
+  width:40px;height:40px;border-radius:0;border:none;background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--text-dim);transition:all .18s;position:relative;
+}
+.icon-btn+.icon-btn::before{
+  content:'';position:absolute;left:0;top:22%;height:56%;width:1px;
+  background:linear-gradient(to bottom,transparent,var(--edge),transparent);
+}
+.icon-btn:hover{background:var(--surf-hover);color:var(--text-low);}
+.icon-btn.active{color:var(--gold);background:rgba(232,201,122,.07);}
+.icon-btn svg{width:14px;height:14px;}
+
+/* ════════════════════════════════════════
+   GESTURE GUIDE
+════════════════════════════════════════ */
+.gesture-guide{
+  position:fixed;bottom:80px;right:16px;z-index:600;width:248px;
+  background:linear-gradient(158deg,rgba(18,16,14,.98),rgba(13,12,10,.99));
+  border:1px solid var(--edge);border-radius:14px;
+  padding:13px 15px;backdrop-filter:blur(40px);
+  box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02);
+  opacity:0;transform:translateY(7px);pointer-events:none;
+  transition:opacity .24s ease,transform .24s ease;
+}
+.gesture-guide::after{
+  content:'';position:absolute;top:0;left:18%;right:18%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);
+}
+.gesture-guide.visible{opacity:1;transform:translateY(0);pointer-events:auto;}
+.gg-header{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
+.gg-icon{width:22px;height:22px;border-radius:6px;border:1px solid var(--edge);background:var(--surf);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text-low);}
+.gg-icon svg{width:11px;height:11px;}
+.gg-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--text);}
+.gg-badge{margin-left:auto;font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-family:'Syne',sans-serif;}
+.gg-steps{display:flex;flex-direction:column;gap:6px;}
+.gg-step{display:flex;gap:7px;align-items:flex-start;}
+.gg-dot{width:13px;height:13px;border-radius:50%;background:var(--surf);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font-size:7px;font-family:'Syne',sans-serif;font-weight:700;color:var(--text-low);flex-shrink:0;margin-top:1px;}
+.gg-text{font-size:10.5px;color:var(--text-mid);line-height:1.55;font-weight:300;}
+.gg-text strong{color:var(--text);font-weight:500;}
+.gg-note{margin-top:8px;padding:6px 9px;background:var(--surf);border:1px solid var(--edge);border-radius:6px;font-size:10px;color:var(--text-low);line-height:1.55;display:flex;gap:5px;align-items:flex-start;}
+.gg-note-icon{flex-shrink:0;color:var(--text-dim);font-size:9px;margin-top:1px;}
+.gg-progress{margin-top:8px;height:1px;background:rgba(255,255,255,.04);border-radius:99px;overflow:hidden;}
+.gg-progress-bar{height:100%;background:linear-gradient(90deg,rgba(255,255,255,.25),rgba(255,255,255,.08));border-radius:99px;width:100%;transform-origin:left;transition:transform linear;}
+
+/* ════════════════════════════════════════
+   TOAST
+════════════════════════════════════════ */
+.toast{
+  position:fixed;bottom:82px;left:50%;transform:translateX(-50%)translateY(12px);
+  background:rgba(14,13,11,.96);border:1px solid var(--edge);border-radius:10px;
+  padding:8px 18px;font-size:11px;color:var(--text-mid);
+  backdrop-filter:blur(40px);opacity:0;transition:all .28s;
+  pointer-events:none;white-space:nowrap;z-index:500;
+  font-family:'Syne',sans-serif;letter-spacing:.5px;
+}
+.toast.show{opacity:1;transform:translateX(-50%)translateY(0);}
+
+/* ════════════════════════════════════════
+   HIDDEN STATUS DOT (JS-only, not visible)
+════════════════════════════════════════ */
+.status-dot{display:none;}
+.version-tag{display:none;}
+
+/* ── API KEYS PANEL ── */
+.key-status{font-size:10px;font-family:'Syne',sans-serif;letter-spacing:.5px;min-height:16px;margin-top:4px;transition:color .2s;}
+.key-status.ok{color:var(--success);}
+.key-status.fail{color:var(--danger);}
+.key-status.checking{color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="grid"></div>
+
+<!-- ══ SPLASH ══ -->
+<div id="splash">
+  <div class="splash-logo">INNOSTAA</div>
+  <div class="splash-sub">Intelligent Neural Assistant</div>
+  <div class="splash-bar-wrap"><div class="splash-bar" id="splashBar"></div></div>
+  <div class="splash-tip" id="splashTip">Initializing systems…</div>
+</div>
+
+<!-- ══ SIDEBAR ══ -->
+<div class="ribbon" id="ribbon">
+  <button class="ribbon-logo-btn" onclick="toggleRibbon()" title="Menu">
+    <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+  </button>
+  <div class="ribbon-divider"></div>
+  <div class="ribbon-item" onclick="openPanel('memory')">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/></svg>
+    <span class="ribbon-label">Memory</span>
+  </div>
+  <div class="ribbon-item" onclick="openPanel('automation')">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    <span class="ribbon-label">Automation</span>
+  </div>
+  <div class="ribbon-item" onclick="openPanel('iot')">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 011.06 0z"/></svg>
+    <span class="ribbon-label">IoT / Room</span>
+  </div>
+  <div class="ribbon-item" onclick="openPanel('apikeys')">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/></svg>
+    <span class="ribbon-label">API Keys</span>
+  </div>
+</div>
+
+<!-- ══ MEMORY PANEL ══ -->
+<div class="panel-overlay" id="memoryOverlay">
+  <div class="panel">
+    <div class="panel-header"><div class="panel-title">Memory</div><button class="panel-close" onclick="closePanelById('memoryOverlay')">&#x2715;</button></div>
+    <div class="panel-body">
+      <p style="font-size:12px;color:var(--text-low);line-height:1.7;">Edit your memory file. INNOSTAA uses this to personalise your experience.</p>
+      <textarea class="memory-textarea" id="memoryText" placeholder="Your memory is empty…"></textarea>
+    </div>
+    <div class="panel-footer">
+      <span class="save-status" id="memorySaveStatus">&#x2713; Saved</span>
+      <button class="panel-btn secondary" onclick="closePanelById('memoryOverlay')">Cancel</button>
+      <button class="panel-btn primary" onclick="saveMemory()">Save Memory</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ API KEYS PANEL ══ -->
+<div class="panel-overlay" id="apikeysOverlay">
+  <div class="panel" style="width:540px;max-width:96vw;">
+    <div class="panel-header">
+      <div class="panel-title">API Keys</div>
+      <button class="panel-close" onclick="closePanelById('apikeysOverlay')">&#x2715;</button>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:12px;color:var(--text-low);line-height:1.7;">Edit and validate your API keys. Stored locally in <code style="font-size:11px;color:var(--text-mid);background:var(--surf);padding:1px 6px;border-radius:5px;border:1px solid var(--edge);">.env</code></p>
+
+      <!-- GROQ -->
+      <div class="form-group">
+        <label class="form-label">Groq API Key &nbsp;<span style="color:var(--text-dim);font-size:7px;letter-spacing:1.5px;">GROQ_API_KEY</span></label>
+        <div class="form-input-wrap" style="display:flex;gap:7px;">
+          <div style="position:relative;flex:1;">
+            <input class="form-input" type="password" id="keyGroq" placeholder="gsk_..." style="padding-right:38px;font-family:monospace;font-size:12px;"/>
+            <button class="eye-btn" onclick="togglePassword('keyGroq',this)" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+          </div>
+          <button onclick="validateKey('groq')" id="validateGroqBtn" style="flex-shrink:0;padding:0 13px;border-radius:9px;border:1px solid var(--edge);background:var(--surf);color:var(--text-low);font-family:'Syne',sans-serif;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;transition:all .18s;" onmouseover="this.style.background='var(--surf-hover)'" onmouseout="this.style.background='var(--surf)'">Validate</button>
+        </div>
+        <div class="key-status" id="statusGroq"></div>
+        <a href="https://console.groq.com/keys" target="_blank" style="font-size:9px;color:var(--text-dim);text-decoration:none;letter-spacing:.5px;font-family:'Syne',sans-serif;margin-top:1px;display:inline-block;transition:color .18s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-dim)'">↗ Get free key at console.groq.com</a>
+      </div>
+
+      <div class="ribbon-divider" style="margin:4px 0;"></div>
+
+      <!-- NVIDIA NIM -->
+      <div class="form-group">
+        <label class="form-label">NVIDIA NIM / Nemotron Key &nbsp;<span style="color:var(--text-dim);font-size:7px;letter-spacing:1.5px;">NEMOTRON_API</span></label>
+        <div class="form-input-wrap" style="display:flex;gap:7px;">
+          <div style="position:relative;flex:1;">
+            <input class="form-input" type="password" id="keyNemotron" placeholder="nvapi-..." style="padding-right:38px;font-family:monospace;font-size:12px;"/>
+            <button class="eye-btn" onclick="togglePassword('keyNemotron',this)" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+          </div>
+          <button onclick="validateKey('nemotron')" id="validateNemotronBtn" style="flex-shrink:0;padding:0 13px;border-radius:9px;border:1px solid var(--edge);background:var(--surf);color:var(--text-low);font-family:'Syne',sans-serif;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;transition:all .18s;" onmouseover="this.style.background='var(--surf-hover)'" onmouseout="this.style.background='var(--surf)'">Validate</button>
+        </div>
+        <div class="key-status" id="statusNemotron"></div>
+        <a href="https://build.nvidia.com/nvidia/llama-3_1-nemotron-70b-instruct" target="_blank" style="font-size:9px;color:var(--text-dim);text-decoration:none;letter-spacing:.5px;font-family:'Syne',sans-serif;margin-top:1px;display:inline-block;transition:color .18s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-dim)'">↗ Get free key at build.nvidia.com</a>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <span class="save-status" id="apikeySaveStatus">&#x2713; Saved</span>
+      <button class="panel-btn secondary" onclick="closePanelById('apikeysOverlay')">Cancel</button>
+      <button class="panel-btn primary" onclick="saveApiKeys()">Save Keys</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AUTOMATION PANEL ══ -->
+<div class="panel-overlay" id="automationOverlay">
+  <div class="panel" style="width:565px;max-width:95vw;">
+    <div class="panel-header"><div class="panel-title">Automation Settings</div><button class="panel-close" onclick="closePanelById('automationOverlay')">&#x2715;</button></div>
+    <div class="panel-body">
+      <p style="font-size:12px;color:var(--text-low);line-height:1.7;">Configure email credentials. Stored locally only.</p>
+      <div class="form-group"><label class="form-label">Email Address</label><div class="form-input-wrap"><input class="form-input" type="email" id="autoEmail" placeholder="your@email.com"/></div></div>
+      <div class="form-group"><label class="form-label">App Password (remove the space)</label><div class="form-input-wrap"><input class="form-input" type="password" id="autoPassword" placeholder="Enter password" style="padding-right:38px"/><button class="eye-btn" onclick="togglePassword('autoPassword',this)" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div>
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
+          <label class="form-label" style="margin:0;">Contacts Memory</label>
+          <button onclick="addContact()" style="background:var(--surf);border:1px solid var(--edge);color:var(--text-low);border-radius:7px;padding:4px 11px;font-size:8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .18s;">+ Add</button>
+        </div>
+        <div id="contactsList" style="display:flex;flex-direction:column;gap:7px;max-height:160px;overflow-y:auto;padding-right:2px;"></div>
+        <p style="font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.55;">Contacts let INNOSTAA recall recipient emails by name.</p>
+      </div>
+    </div>
+    <div class="panel-footer"><span class="save-status" id="autoSaveStatus">&#x2713; Saved</span><button class="panel-btn secondary" onclick="closePanelById('automationOverlay')">Cancel</button><button class="panel-btn primary" onclick="saveAutomation()">Save Settings</button></div>
+  </div>
+</div>
+
+<!-- ══ IOT PANEL ══ -->
+<div class="panel-overlay" id="iotOverlay">
+  <div class="panel" style="width:605px;max-width:96vw;">
+    <div class="panel-header"><div class="panel-title">IoT &amp; Room Automation</div><button class="panel-close" onclick="closePanelById('iotOverlay')">&#x2715;</button></div>
+    <div class="panel-body" style="gap:16px;">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:11px;align-items:end;">
+        <div class="form-group">
+          <label class="form-label">ESP32 IP Address</label>
+          <div class="form-input-wrap" style="display:flex;gap:7px;">
+            <input class="form-input" type="text" id="iotIpInput" placeholder="http://192.168.1.24" style="font-family:monospace;font-size:12px;"/>
+            <button onclick="testEsp32()" id="iotTestBtn" style="flex-shrink:0;padding:0 13px;border-radius:9px;border:1px solid var(--edge);background:var(--surf);color:var(--text-low);font-family:'Syne',sans-serif;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;transition:all .18s;">Ping</button>
+          </div>
+        </div>
+        <div id="esp32StatusPill" style="display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--surf);border:1px solid var(--edge);border-radius:99px;font-size:10px;color:var(--text-mid);white-space:nowrap;margin-bottom:1px;">
+          <div id="esp32Dot" style="width:4px;height:4px;border-radius:50%;background:var(--text-dim);flex-shrink:0;"></div>
+          <span id="esp32StatusTxt" style="font-family:'Syne',sans-serif;letter-spacing:.5px;">Not checked</span>
+        </div>
+      </div>
+      <div>
+        <label class="form-label" style="margin-bottom:9px;display:block;">Quick Light Control</label>
+        <div style="display:flex;gap:9px;">
+          <button onclick="quickLight('on')" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--edge);background:var(--surf);color:var(--text-low);font-family:'Syne',sans-serif;font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .18s;letter-spacing:.5px;text-transform:uppercase;" onmouseover="this.style.background='var(--surf-hover)'" onmouseout="this.style.background='var(--surf)'">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>On
+          </button>
+          <button onclick="quickLight('off')" style="flex:1;padding:10px;border-radius:9px;border:1px solid rgba(184,92,72,.18);background:rgba(184,92,72,.05);color:var(--danger);font-family:'Syne',sans-serif;font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .18s;letter-spacing:.5px;text-transform:uppercase;" onmouseover="this.style.background='rgba(184,92,72,.10)'" onmouseout="this.style.background='rgba(184,92,72,.05)'">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636"/></svg>Off
+          </button>
+        </div>
+        <p id="lightCmdFeedback" style="font-size:11px;color:var(--text-dim);margin-top:7px;min-height:15px;transition:color .25s;font-family:'Syne',sans-serif;"></p>
+      </div>
+      <div style="height:1px;background:var(--edge);margin:0 -22px;"></div>
+      <div>
+        <label class="form-label" style="margin-bottom:10px;display:block;">ESP32 Setup Guide</label>
+        <div style="display:flex;gap:5px;margin-bottom:11px;" id="iotTabs">
+          <button class="iot-tab active" onclick="switchIotTab('wiring')" id="tab-wiring">① Wiring</button>
+          <button class="iot-tab" onclick="switchIotTab('code')" id="tab-code">② Arduino Code</button>
+          <button class="iot-tab" onclick="switchIotTab('connect')" id="tab-connect">③ Connect</button>
+        </div>
+        <div id="iotPane-wiring" class="iot-pane" style="display:block;">
+          <div style="background:rgba(255,255,255,.018);border:1px solid var(--edge);border-radius:10px;padding:13px 15px;">
+            <p style="font-size:12px;color:var(--text-mid);line-height:1.75;margin-bottom:9px;">Wire your relay module to the ESP32:</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+              <div style="background:var(--surf);border:1px solid var(--edge);border-radius:7px;padding:9px 12px;"><div style="font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-family:'Syne',sans-serif;margin-bottom:5px;">ESP32</div><div style="font-size:11px;color:var(--text);font-family:monospace;line-height:1.9;">GPIO 26 → Relay IN<br>3.3V/5V → VCC<br>GND → GND</div></div>
+              <div style="background:var(--surf);border:1px solid var(--edge);border-radius:7px;padding:9px 12px;"><div style="font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-family:'Syne',sans-serif;margin-bottom:5px;">Relay → Light</div><div style="font-size:11px;color:var(--text);font-family:monospace;line-height:1.9;">COM → Live in<br>NO → Live out<br><span style="font-size:10px;color:var(--text-dim);">⚠ 220V — use care</span></div></div>
+            </div>
+          </div>
+        </div>
+        <div id="iotPane-code" class="iot-pane" style="display:none;">
+          <div style="position:relative;"><button onclick="copyEspCode()" id="copyCodeBtn" style="position:absolute;top:9px;right:9px;z-index:2;padding:3px 10px;border-radius:6px;border:1px solid var(--edge);background:var(--surf);color:var(--text-mid);font-family:'Syne',sans-serif;font-size:8px;font-weight:700;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;transition:all .18s;">Copy</button><pre id="espCodeBlock" style="background:rgba(0,0,0,.4);border:1px solid var(--edge);border-radius:10px;padding:13px 15px;font-size:11px;font-family:monospace;color:rgba(255,248,230,.45);overflow-x:auto;line-height:1.75;max-height:240px;overflow-y:auto;white-space:pre;margin:0;user-select:text;"></pre></div>
+        </div>
+        <div id="iotPane-connect" class="iot-pane" style="display:none;">
+          <div style="background:rgba(255,255,255,.018);border:1px solid var(--edge);border-radius:10px;padding:13px 15px;display:flex;flex-direction:column;gap:9px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;"><div style="width:18px;height:18px;border-radius:50%;background:var(--surf);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font-size:8px;font-family:'Syne',sans-serif;font-weight:700;color:var(--text-low);flex-shrink:0;">1</div><p style="font-size:12px;color:var(--text-mid);line-height:1.6;">Upload the sketch. Open Serial Monitor at 115200 baud — it prints the ESP32's IP.</p></div>
+            <div style="display:flex;gap:10px;align-items:flex-start;"><div style="width:18px;height:18px;border-radius:50%;background:var(--surf);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font-size:8px;font-family:'Syne',sans-serif;font-weight:700;color:var(--text-low);flex-shrink:0;">2</div><p style="font-size:12px;color:var(--text-mid);line-height:1.6;">Paste the IP as <code style="background:rgba(255,255,255,.05);padding:1px 4px;border-radius:3px;color:var(--text);">http://192.168.x.x</code> and click Ping.</p></div>
+            <div style="display:flex;gap:10px;align-items:flex-start;"><div style="width:18px;height:18px;border-radius:50%;background:var(--surf);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font-size:8px;font-family:'Syne',sans-serif;font-weight:700;color:var(--text-low);flex-shrink:0;">3</div><p style="font-size:12px;color:var(--text-mid);line-height:1.6;">Say <em style="color:var(--text-low);">"turn on the light"</em> or use the buttons above.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-footer"><span class="save-status" id="iotSaveStatus">&#x2713; Saved</span><button class="panel-btn secondary" onclick="closePanelById('iotOverlay')">Cancel</button><button class="panel-btn primary" onclick="saveIotConfig()">Save IP</button></div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div class="app" id="mainApp" style="opacity:0;pointer-events:none;">
+
+  <header>
+    <div class="logo-group">
+      <div class="logo">INNOSTAA</div>
+      <div class="ai-pulse" id="aiPulse"></div>
+      <div class="tagline">Intelligent Neural Assistant</div>
+    </div>
+    <div class="header-right"></div>
+  </header>
+
+  <main>
+    <div class="convo-panel glass glass-shimmer">
+      <div class="shimmer-sweep"></div>
+      <div class="convo-label">Conversation</div>
+      <div class="conversation-log" id="conversationLog">
+        <div class="message">
+          <div class="message-role assistant">Innostaa</div>
+          <div class="message-text">Hello. I am INNOSTAA — your intelligent desktop assistant. Enable the microphone to speak, or type a message below.</div>
+          <button class="msg-copy-btn" title="Copy message" onclick="copyMessage(this)">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="right-panel">
+    <div class="vision-panel">
+      <div class="vision-header">
+        <div class="vision-title">Vision Feed</div>
+        <div class="live-badge" id="liveBadge"><div class="live-badge-dot"></div>LIVE</div>
+      </div>
+      <div class="vision-placeholder" id="videoPlaceholder">
+        <div class="vision-eye">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9A2.25 2.25 0 0013.5 5.25h-9A2.25 2.25 0 002.25 7.5v9A2.25 2.25 0 004.5 18.75z"/></svg>
+        </div>
+        <div class="vision-ph-text">Vision inactive.<br>Say "start live video" to activate.</div>
+      </div>
+      <img id="videoFeed" alt="Vision Feed"/>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Session</div><div class="stat-value" id="sessionTime">00:00</div></div>
+      <div class="stat-card"><div class="stat-label">Messages</div><div class="stat-value" id="msgCount">0</div></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="input-capsule">
+      <input type="text" id="textInput" class="text-input" placeholder="Type a message…" autocomplete="off" onkeydown="if(event.key==='Enter')sendTextMessage()"/>
+      <div class="capsule-divider"></div>
+      <button class="send-btn" onclick="sendTextMessage()" title="Send">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.269 20.876L5.999 12zm0 0h7.5"/></svg>
+      </button>
+      <button class="mic-btn off" id="micBtn" onclick="toggleMic()" title="Toggle microphone">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/></svg>
+      </button>
+      <span class="mic-state" id="micStateLabel">Off</span>
+    </div>
+    <div class="feature-toolbar">
+      <button class="icon-btn" id="cameraBtn" title="Live Video" onclick="toggleFeature('camera')"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg></button>
+      <button class="icon-btn" id="screenBtn" title="Screen Share" onclick="toggleFeature('screen')"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3"/></svg></button>
+      <button class="icon-btn" id="mouseBtn" title="Virtual Mouse" onclick="toggleFeature('mouse')"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59"/></svg></button>
+      <button class="icon-btn" id="whiteboardBtn" title="Whiteboard" onclick="toggleFeature('whiteboard')"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg></button>
+      <button class="icon-btn" id="tictactoeBtn" title="Tic Tac Toe" onclick="toggleFeature('tictactoe')"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg></button>
+    </div>
+  </footer>
+
+</div><!-- /.app -->
+
+<div class="gesture-guide" id="gestureGuide">
+  <div class="gg-header"><div class="gg-icon" id="ggIcon"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg></div><div class="gg-title" id="ggTitle">Guide</div><div class="gg-badge">How To Use</div></div>
+  <div class="gg-steps" id="ggSteps"></div>
+  <div class="gg-note"><span class="gg-note-icon">✦</span><span>Keep your hand <strong style="color:var(--text-mid);">upright and facing the camera</strong>. Even a slight tilt reduces accuracy.</span></div>
+  <div class="gg-progress"><div class="gg-progress-bar" id="ggProgressBar"></div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════
+   FINE DUST PARTICLE ENGINE
+   — 4500 particles, sub-pixel size
+   — gold (72%) + deep starlight blue (28%)
+   — starlight blue ONLY in background
+   — canvas clips to full page; particles
+     naturally sit behind all glass panels
+   — three soft nebula veils breathe slowly
+════════════════════════════════════════ */
+(function bgDust(){
+  const cv = document.getElementById('bg-canvas');
+  const cx = cv.getContext('2d');
+  let W, H, pts=[], nbs=[];
+  const N = 4500;
+
+  function resize(){
+    W = cv.width  = window.innerWidth;
+    H = cv.height = window.innerHeight;
+    pts = [];
+    for(let i=0;i<N;i++) pts.push(mkPt(true));
+    nbs = [
+      // warm gold veil — centre-left
+      {x:W*.28,y:H*.45,r:W*.30,ra:0,rb:.020,rb2:.008,spd:.00045,off:0},
+      // warm gold veil — bottom-right
+      {x:W*.75,y:H*.68,r:W*.26,ra:0,rb:.016,rb2:.006,spd:.00038,off:2.1},
+      // deep starlight blue — top edge
+      {x:W*.55,y:H*.08,r:W*.22,ra:0,rb:.022,rb2:.008,spd:.00052,off:4.4,blue:true},
+    ];
+  }
+
+  function mkPt(init){
+    const g = Math.random() < 0.72; // 72% gold, 28% starlight blue
+    // Very fine: most particles are sub-pixel specks
+    const sc = Math.random();
+    const r  = sc<.70 ? Math.random()*.35+.06    // fine speck: 0.06–0.41
+             : sc<.92 ? Math.random()*.55+.38    // medium mote: 0.38–0.93
+             :           Math.random()*.8+.85;   // rare larger: 0.85–1.65
+    return {
+      x:   Math.random()*(init?W:W+20)-10,
+      y:   Math.random()*(init?H:H+20)-10,
+      vx:  (Math.random()-.5)*.032,            // very slow drift
+      vy:  (Math.random()-.5)*.022 - .005,     // faint upward float
+      rot: Math.random()*Math.PI*2,
+      vr:  (Math.random()-.5)*.0018,
+      r,
+      ax:  .6+Math.random()*.65,               // elongation
+      ay:  .6+Math.random()*.65,
+      a0:  Math.random()*.18+.02,              // max opacity — very faint
+      tw:  Math.random()*.005+.001,
+      ph:  Math.random()*Math.PI*2,
+      g,   // gold vs blue
+    };
+  }
+
+  let f=0;
+  function draw(){
+    f++;
+    cx.clearRect(0,0,W,H);
+
+    // ── Nebula veils ──
+    for(const nb of nbs){
+      const s = nb.rb + nb.rb2*Math.sin(f*nb.spd+nb.off);
+      const g2 = cx.createRadialGradient(nb.x,nb.y,0,nb.x,nb.y,nb.r);
+      if(nb.blue){
+        g2.addColorStop(0,  `rgba(32,44,96,${(s).toFixed(4)})`);
+        g2.addColorStop(.45,`rgba(32,44,96,${(s*.35).toFixed(4)})`);
+      } else {
+        g2.addColorStop(0,  `rgba(232,201,122,${s.toFixed(4)})`);
+        g2.addColorStop(.45,`rgba(232,201,122,${(s*.3).toFixed(4)})`);
+      }
+      g2.addColorStop(1,'rgba(0,0,0,0)');
+      cx.fillStyle=g2;
+      cx.fillRect(0,0,W,H);
+    }
+
+    // ── Dust particles ──
+    for(const p of pts){
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+      if(p.x<-4)p.x=W+4; if(p.x>W+4)p.x=-4;
+      if(p.y<-4)p.y=H+4; if(p.y>H+4)p.y=-4;
+
+      // Gentle twinkle
+      const al = p.a0*(0.22+.78*Math.abs(Math.sin(f*p.tw+p.ph)));
+
+      cx.save();
+      cx.translate(p.x,p.y);
+      cx.rotate(p.rot);
+      cx.globalAlpha=al;
+      // Gold: warm #E8C97A | Blue: deep starlight #1E2B60
+      cx.fillStyle = p.g ? '#E8C97A' : '#1E2B60';
+      cx.beginPath();
+      cx.ellipse(0,0,p.r*p.ax,p.r*p.ay,0,0,Math.PI*2);
+      cx.fill();
+      cx.restore();
+    }
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize',resize);
+  resize();
+  requestAnimationFrame(draw);
+})();
+
+/* ════════════════════════════════════════
+   SPLASH
+════════════════════════════════════════ */
+const TIPS=['Say "open whiteboard" to draw with your hand.','INNOSTAA remembers your preferences across sessions.','Say "start live video" to enable vision mode.','Say "play tic tac toe" to start a gesture game.','Use virtual mouse by saying "use virtual mouse".','Your memory file can be edited from the sidebar.','INNOSTAA can search the internet for latest information.','Just talk naturally — INNOSTAA understands context.'];
+let tipIdx=0,splashDone=false;
+function nextTip(m){const e=document.getElementById('splashTip');if(!e)return;e.style.animation='none';e.offsetHeight;e.style.animation='tipIn .5s ease';e.textContent=m||TIPS[tipIdx++%TIPS.length];}
+function advanceSplash(p,m){const b=document.getElementById('splashBar');if(b)b.style.width=Math.max(parseFloat(b.style.width||0),p)+'%';if(m)nextTip(m);}
+function splashComplete(){if(splashDone)return;splashDone=true;advanceSplash(100,'Ready.');setTimeout(()=>{const s=document.getElementById('splash'),a=document.getElementById('mainApp');if(s)s.classList.add('hidden');if(a){a.style.opacity='1';a.style.pointerEvents='auto';}startTimer();},800);}
+nextTip();
+const tipInt=setInterval(()=>{if(splashDone)clearInterval(tipInt);else nextTip();},2600);
+setTimeout(splashComplete,60000);
+
+const t0=Date.now();
+function startTimer(){setInterval(()=>{const e=document.getElementById('sessionTime');if(!e)return;const s=Math.floor((Date.now()-t0)/1000);e.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');},1000);}
+
+function showToast(m){const t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+
+let ribbonOpen=false;
+function toggleRibbon(){ribbonOpen=!ribbonOpen;document.getElementById('ribbon').classList.toggle('expanded',ribbonOpen);document.getElementById('mainApp').classList.toggle('ribbon-open',ribbonOpen);}
+
+function openPanel(n){
+  if(n==='memory'){
+    document.getElementById('memoryOverlay').classList.add('open');
+    if(window.pywebview) window.pywebview.api.get_memory().then(t=>{document.getElementById('memoryText').value=t||'';});
+  } else if(n==='iot'){
+    openIotPanel();
+  } else if(n==='apikeys'){
+    // Clear previous validation states
+    ['statusGroq','statusNemotron'].forEach(id=>{const el=document.getElementById(id);if(el){el.className='key-status';el.textContent='';}});
+    document.getElementById('apikeysOverlay').classList.add('open');
+    if(window.pywebview){
+      window.pywebview.api.get_api_keys().then(d=>{
+        try{const j=typeof d==='string'?JSON.parse(d):d;
+          if(j.GROQ_API_KEY)document.getElementById('keyGroq').value=j.GROQ_API_KEY;
+          if(j.NEMOTRON_API)document.getElementById('keyNemotron').value=j.NEMOTRON_API;
+        }catch(e){}
+      });
+    }
+  } else {
+    document.getElementById('automationOverlay').classList.add('open');
+    if(window.pywebview){
+      window.pywebview.api.get_automation_config().then(c=>{
+        try{
+          const j=typeof c==='string'?JSON.parse(c):c;
+          if(!j) return;
+          document.getElementById('autoEmail').value   = j.email    || '';
+          document.getElementById('autoPassword').value= j.password || '';
+          // Load saved contacts into _contacts and render them
+          if(j.contacts && typeof j.contacts === 'object'){
+            _contacts = j.contacts;
+          } else {
+            _contacts = {};
+          }
+          renderContacts();
+        }catch(e){ console.error('Config parse error',e); }
+      });
+    } else {
+      // No pywebview — just render whatever is already in _contacts
+      renderContacts();
+    }
+  }
+}
+function closePanelById(id){document.getElementById(id).classList.remove('open');}
+function saveMemory(){const t=document.getElementById('memoryText').value;const s=()=>{const el=document.getElementById('memorySaveStatus');el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);};if(window.pywebview)window.pywebview.api.save_memory(t).then(s);else s();}
+
+let _contacts={};
+function renderContacts(){
+  const l=document.getElementById('contactsList');
+  if(!l) return;
+  l.innerHTML='';
+  const entries=Object.entries(_contacts);
+  if(!entries.length){
+    l.innerHTML='<p style="font-size:11px;color:var(--text-dim);text-align:center;padding:12px 0;">No contacts saved yet. Click + Add to create one.</p>';
+    return;
+  }
+  entries.forEach(([name, emailVal], idx)=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.022);border:1px solid var(--edge);border-radius:8px;padding:7px 11px;';
+    row.dataset.origName=name;
+
+    const nameInp=document.createElement('input');
+    nameInp.value=name;
+    nameInp.placeholder='Name';
+    nameInp.style.cssText='flex:1;background:transparent;border:none;color:var(--text);font-family:DM Sans,sans-serif;font-size:13px;outline:none;user-select:text;';
+    nameInp.addEventListener('change', function(){
+      const orig=row.dataset.origName;
+      const newName=this.value.trim();
+      if(!newName || newName===orig) return;
+      const v=_contacts[orig];
+      delete _contacts[orig];
+      _contacts[newName]=v;
+      row.dataset.origName=newName;
+    });
+
+    const sep=document.createElement('span');
+    sep.style.cssText='color:var(--edge);font-size:10px;flex-shrink:0;';
+    sep.textContent='|';
+
+    const emailInp=document.createElement('input');
+    emailInp.value=emailVal;
+    emailInp.placeholder='email@example.com';
+    emailInp.type='email';
+    emailInp.style.cssText='flex:2;background:transparent;border:none;color:var(--text-mid);font-family:DM Sans,sans-serif;font-size:13px;outline:none;user-select:text;';
+    emailInp.addEventListener('change', function(){
+      _contacts[row.dataset.origName]=this.value.trim();
+    });
+
+    const del=document.createElement('button');
+    del.innerHTML='&#x2715;';
+    del.style.cssText='background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:13px;padding:2px 4px;transition:color .18s;flex-shrink:0;';
+    del.addEventListener('mouseenter',()=>del.style.color='var(--danger)');
+    del.addEventListener('mouseleave',()=>del.style.color='var(--text-dim)');
+    del.addEventListener('click',()=>{ delete _contacts[row.dataset.origName]; renderContacts(); });
+
+    row.appendChild(nameInp);
+    row.appendChild(sep);
+    row.appendChild(emailInp);
+    row.appendChild(del);
+    l.appendChild(row);
+  });
+}
+function addContact(){
+  let i=Object.keys(_contacts).length+1;
+  while(_contacts['New Contact '+i]) i++;
+  _contacts['New Contact '+i]='';
+  renderContacts();
+  // Focus the new name input
+  setTimeout(()=>{
+    const rows=document.querySelectorAll('#contactsList > div');
+    const last=rows[rows.length-1];
+    if(last) last.querySelector('input').focus();
+  },50);
+}
+function saveAutomation(){
+  const c={
+    email:    document.getElementById('autoEmail').value,
+    password: document.getElementById('autoPassword').value,
+    contacts: _contacts
+    // smtp, port, imap are hardcoded in the backend — not sent from GUI
+  };
+  const s=()=>{const el=document.getElementById('autoSaveStatus');el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);};
+  if(window.pywebview) window.pywebview.api.save_automation_config(JSON.stringify(c)).then(s);
+  else s();
+}
+function togglePassword(id,btn){const i=document.getElementById(id);if(!i)return;if(i.type==='password'){i.type='text';btn.innerHTML='<svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>';}else{i.type='password';btn.innerHTML='<svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';}}
+
+let activeFeature=null,featurePending=false;
+const featureMap={camera:'cameraBtn',screen:'screenBtn',mouse:'mouseBtn',whiteboard:'whiteboardBtn',tictactoe:'tictactoeBtn'};
+function _videoPanel(on){const ba=document.getElementById('liveBadge'),ph=document.getElementById('videoPlaceholder'),fd=document.getElementById('videoFeed');if(on){if(ba)ba.classList.add('active');if(ph)ph.style.display='none';if(fd)fd.classList.add('active');}else{if(ba)ba.classList.remove('active');if(ph)ph.style.display='flex';if(fd){fd.classList.remove('active');fd.src='';}}}
+function _syncAllButtons(n){Object.keys(featureMap).forEach(k=>{const b=document.getElementById(featureMap[k]);if(!b)return;if(k===n){b.classList.add('active');b.style.opacity='';b.style.pointerEvents='';}else{b.classList.remove('active');b.style.opacity='';b.style.pointerEvents='';}});}
+function syncFeatureState(n,a){featurePending=false;Object.keys(featureMap).forEach(k=>{const b=document.getElementById(featureMap[k]);if(b){b.style.opacity='';b.style.pointerEvents='';}});if(a){if(activeFeature&&activeFeature!==n){const ob=document.getElementById(featureMap[activeFeature]);if(ob)ob.classList.remove('active');}activeFeature=n;_syncAllButtons(n);_videoPanel(true);showToast(n.charAt(0).toUpperCase()+n.slice(1)+' started');}else{if(activeFeature===n){activeFeature=null;_videoPanel(false);}_syncAllButtons(null);showToast(n.charAt(0).toUpperCase()+n.slice(1)+' stopped');}}
+function activateFeature(n,s,fp){if(fp){syncFeatureState(n,s);return;}toggleFeature(n);}
+function toggleFeature(n){if(featurePending)return;featurePending=true;const ns=activeFeature!==n;Object.keys(featureMap).forEach(k=>{const b=document.getElementById(featureMap[k]);if(!b)return;b.style.pointerEvents='none';if(k===n&&ns){b.classList.add('active');b.style.opacity='.6';}else{b.classList.remove('active');b.style.opacity=k===n?'':'.4';}});if(window.pywebview){window.pywebview.api.toggle_feature(n,ns);}else{setTimeout(()=>syncFeatureState(n,ns),100);}}
+
+let micEnabled=false;
+function _setMicVisual(en){
+  const btn=document.getElementById('micBtn'),lbl=document.getElementById('micStateLabel'),pulse=document.getElementById('aiPulse');
+  if(!btn)return;
+  if(en){btn.classList.remove('off');btn.classList.add('on');if(lbl){lbl.textContent='On';lbl.className='mic-state on';}if(pulse)pulse.style.animationDuration='1.6s';}
+  else{btn.classList.remove('on','speaking');btn.classList.add('off');if(lbl){lbl.textContent='Off';lbl.className='mic-state';}if(pulse)pulse.style.animationDuration='3.8s';}
+}
+function toggleMic(){micEnabled=!micEnabled;_setMicVisual(micEnabled);showToast(micEnabled?'Microphone on':'Microphone off');if(window.pywebview)window.pywebview.api.toggle_mic(micEnabled);}
+
+function updateStatus(s,t){
+  const typ=document.getElementById('typingIndicator'),btn=document.getElementById('micBtn'),lbl=document.getElementById('micStateLabel'),pulse=document.getElementById('aiPulse');
+  if(s==='listening'){if(btn&&micEnabled){btn.classList.remove('off','speaking');btn.classList.add('on');}if(lbl&&micEnabled){lbl.textContent='On';lbl.className='mic-state on';}if(typ)typ.classList.remove('active');if(pulse)pulse.style.animationDuration='1.6s';}
+  else if(s==='speaking'){if(btn){btn.classList.remove('off','on');btn.classList.add('speaking');}if(lbl){lbl.textContent='Speaking';lbl.className='mic-state speaking';}if(typ)typ.classList.remove('active');if(pulse)pulse.style.animationDuration='.8s';}
+  else if(s==='thinking'){if(typ)typ.classList.add('active');if(pulse)pulse.style.animationDuration='1.1s';}
+  else{if(btn&&micEnabled){btn.classList.remove('off','speaking');btn.classList.add('on');}else if(btn){btn.classList.remove('on','speaking');btn.classList.add('off');}if(lbl){lbl.textContent=micEnabled?'On':'Off';lbl.className='mic-state'+(micEnabled?' on':'');}if(typ)typ.classList.remove('active');if(pulse)pulse.style.animationDuration=micEnabled?'1.6s':'3.8s';}
+}
+
+let msgCount=0;
+function addMessage(r,t){
+  const l=document.getElementById('conversationLog'),c=document.getElementById('msgCount');
+  if(!l) return;
+  const m=document.createElement('div');
+  m.className='message';
+  m.innerHTML=
+    '<div class="message-role '+r+'">'+(r==='user'?'You':'Innostaa')+'</div>'+
+    '<div class="message-text'+(r==='user'?' user-text':'')+'">'+ t +'</div>'+
+    '<button class="msg-copy-btn" title="Copy message" onclick="copyMessage(this)">'+
+      '<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">'+
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/>'+
+      '</svg>'+
+    '</button>';
+  l.appendChild(m);
+  l.scrollTop=l.scrollHeight;
+  if(c) c.textContent=++msgCount;
+}
+
+/* Copy the text of the message this button belongs to */
+function copyMessage(btn){
+  const msgEl=btn.closest('.message');
+  if(!msgEl) return;
+  const textEl=msgEl.querySelector('.message-text');
+  if(!textEl) return;
+  const text=textEl.innerText||textEl.textContent||'';
+  navigator.clipboard.writeText(text.trim()).then(()=>{
+    // Swap icon to checkmark
+    btn.classList.add('copied');
+    btn.innerHTML=
+      '<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">'+
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>'+
+      '</svg>';
+    setTimeout(()=>{
+      btn.classList.remove('copied');
+      btn.innerHTML=
+        '<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">'+
+          '<path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/>'+
+        '</svg>';
+    }, 1800);
+  }).catch(()=> showToast('Could not copy text'));
+}
+
+function updateVideoFrame(b){const f=document.getElementById('videoFeed'),p=document.getElementById('videoPlaceholder'),ba=document.getElementById('liveBadge');if(!f)return;f.src='data:image/jpeg;base64,'+b;if(!f.classList.contains('active')){f.classList.add('active');if(p)p.style.display='none';if(ba)ba.classList.add('active');}}
+function clearVideoFeed(){const f=document.getElementById('videoFeed'),p=document.getElementById('videoPlaceholder'),ba=document.getElementById('liveBadge');if(f){f.classList.remove('active');f.src='';}if(p)p.style.display='flex';if(ba)ba.classList.remove('active');}
+function sendTextMessage(){const i=document.getElementById('textInput');if(!i)return;const t=i.value.trim();if(!t)return;i.value='';if(window.pywebview)window.pywebview.api.send_text(t);}
+
+const ESP32_CODE=`#include <WiFi.h>\n#include <WebServer.h>\n\nconst char* ssid     = "YOUR_WIFI_SSID";\nconst char* password = "YOUR_WIFI_PASSWORD";\n#define RELAY_PIN 26\n#define RELAY_ON  LOW\n#define RELAY_OFF HIGH\nWebServer server(80);\n\nvoid handlePing()    { server.send(200,"text/plain","pong"); }\nvoid handleLightOn() { digitalWrite(RELAY_PIN,RELAY_ON);  server.send(200,"text/plain","light_on"); }\nvoid handleLightOff(){ digitalWrite(RELAY_PIN,RELAY_OFF); server.send(200,"text/plain","light_off"); }\nvoid handleNotFound(){ server.send(404,"text/plain","not found"); }\n\nvoid setup(){\n  Serial.begin(115200);\n  pinMode(RELAY_PIN,OUTPUT);\n  digitalWrite(RELAY_PIN,RELAY_OFF);\n  WiFi.begin(ssid,password);\n  while(WiFi.status()!=WL_CONNECTED){delay(500);Serial.print(".");}\n  Serial.println("\\nIP: "+WiFi.localIP().toString());\n  server.on("/ping",HTTP_GET,handlePing);\n  server.on("/light/on",HTTP_GET,handleLightOn);\n  server.on("/light/off",HTTP_GET,handleLightOff);\n  server.onNotFound(handleNotFound);\n  server.begin();\n}\nvoid loop(){ server.handleClient(); }`;
+
+function switchIotTab(t){['wiring','code','connect'].forEach(k=>{document.getElementById('iotPane-'+k).style.display=k===t?'block':'none';const tb=document.getElementById('tab-'+k);if(tb){if(k===t)tb.classList.add('active');else tb.classList.remove('active');}});if(t==='code')document.getElementById('espCodeBlock').textContent=ESP32_CODE;}
+function openIotPanel(){document.getElementById('iotOverlay').classList.add('open');if(window.pywebview)window.pywebview.api.get_iot_config().then(c=>{try{const j=typeof c==='string'?JSON.parse(c):c;if(j&&j.esp32_ip)document.getElementById('iotIpInput').value=j.esp32_ip;}catch(e){}});if(!document.getElementById('espCodeBlock').textContent.trim())document.getElementById('espCodeBlock').textContent=ESP32_CODE;}
+function saveIotConfig(){const ip=document.getElementById('iotIpInput').value.trim();if(!ip){showToast('Enter an IP address first');return;}const s=()=>{const el=document.getElementById('iotSaveStatus');el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);showToast('ESP32 IP saved');};if(window.pywebview)window.pywebview.api.save_iot_config(JSON.stringify({esp32_ip:ip})).then(s);else s();}
+function testEsp32(){const ip=document.getElementById('iotIpInput').value.trim();if(!ip){showToast('Enter an IP first');return;}const d=document.getElementById('esp32Dot'),t=document.getElementById('esp32StatusTxt'),b=document.getElementById('iotTestBtn');d.style.background='rgba(255,248,230,.3)';t.textContent='Checking…';b.textContent='…';if(window.pywebview){window.pywebview.api.ping_esp32(ip).then(ok=>{b.textContent='Ping';if(ok){d.style.background='var(--success)';d.style.boxShadow='0 0 6px var(--success)';t.textContent='Connected ✓';}else{d.style.background='var(--danger)';d.style.boxShadow='0 0 6px var(--danger)';t.textContent='Unreachable';}});}else{b.textContent='Ping';d.style.background='var(--text-dim)';t.textContent='No pywebview';}}
+function quickLight(s){const f=document.getElementById('lightCmdFeedback');f.style.color='var(--text-mid)';f.textContent=s==='on'?'Turning light on…':'Turning light off…';if(window.pywebview)window.pywebview.api.control_light_gui(s).then(m=>{f.style.color=m.includes('turned')?'var(--success)':'var(--danger)';f.textContent=m;});else f.textContent='pywebview not available';}
+function copyEspCode(){const b=document.getElementById('copyCodeBtn');navigator.clipboard.writeText(ESP32_CODE).then(()=>{b.textContent='Copied!';setTimeout(()=>b.textContent='Copy',2000);});}
+
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target===document.body){e.preventDefault();toggleMic();}if(e.key==='Escape'){closePanelById('memoryOverlay');closePanelById('automationOverlay');closePanelById('iotOverlay');closePanelById('apikeysOverlay');_dismissGg();}});
+
+/* ── API KEYS ── */
+function saveApiKeys(){
+  const groq=document.getElementById('keyGroq').value.trim();
+  const nem=document.getElementById('keyNemotron').value.trim();
+  const show=()=>{const el=document.getElementById('apikeySaveStatus');el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);showToast('API keys saved');};
+  if(window.pywebview) window.pywebview.api.save_api_keys(JSON.stringify({GROQ_API_KEY:groq,NEMOTRON_API:nem})).then(show);
+  else show();
+}
+
+function validateKey(which){
+  const cfg={
+    groq:     {inputId:'keyGroq',     statusId:'statusGroq',     btnId:'validateGroqBtn'},
+    nemotron: {inputId:'keyNemotron', statusId:'statusNemotron', btnId:'validateNemotronBtn'}
+  }[which];
+  if(!cfg) return;
+  const val=document.getElementById(cfg.inputId).value.trim();
+  const st=document.getElementById(cfg.statusId);
+  const btn=document.getElementById(cfg.btnId);
+  if(!val){st.className='key-status fail';st.textContent='⚠ Enter a key first.';return;}
+  st.className='key-status checking';st.textContent='Checking…';
+  btn.textContent='…';btn.disabled=true;
+  if(window.pywebview){
+    window.pywebview.api.validate_api_key(which,val).then(ok=>{
+      btn.textContent='Validate';btn.disabled=false;
+      if(ok){st.className='key-status ok';st.textContent='✓ Key is valid';}
+      else{st.className='key-status fail';st.textContent='✕ Key invalid or request failed';}
+    });
+  } else {
+    setTimeout(()=>{btn.textContent='Validate';btn.disabled=false;st.className='key-status fail';st.textContent='⚠ pywebview not available';},800);
+  }
+}
+
+const GESTURE_GUIDES={
+  mouse:{title:'Virtual Mouse',icon:`<svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59"/></svg>`,steps:[{text:'Raise your <strong>index finger</strong> and move it to control the cursor.'},{text:'<strong>Pinch index and thumb</strong> together to left-click.'},{text:'Extend <strong>index and middle fingers</strong> to scroll.'}]},
+  whiteboard:{title:'Whiteboard',icon:`<svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>`,steps:[{text:'Raise only your <strong>index finger</strong> to move the pointer.'},{text:'Raise both <strong>index and middle fingers</strong> to draw.'},{text:'<strong>Pinch all fingers</strong> to erase.'}]},
+  tictactoe:{title:'Tic Tac Toe',icon:`<svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>`,steps:[{text:'Show an <strong>open hand</strong> to hover over a cell.'},{text:'<strong>Close your fist</strong> to place your mark.'}]}
+};
+const GUIDED_FEATURES=['mouse','whiteboard','tictactoe'];
+let _ggT=null,_ggP=false,_ggE=0,_ggS=null;
+const _ggD=5500;
+function showGestureGuide(n){const g=GESTURE_GUIDES[n];if(!g)return;const el=document.getElementById('gestureGuide'),ti=document.getElementById('ggTitle'),ic=document.getElementById('ggIcon'),st=document.getElementById('ggSteps'),ba=document.getElementById('ggProgressBar');_clearGgTimer();_ggE=0;ti.textContent=g.title;ic.innerHTML=g.icon;st.innerHTML=g.steps.map((s,i)=>`<div class="gg-step"><div class="gg-dot">${i+1}</div><div class="gg-text">${s.text}</div></div>`).join('');ba.style.transition='none';ba.style.transform='scaleX(1)';el.classList.add('visible');requestAnimationFrame(()=>requestAnimationFrame(()=>{ba.style.transition=`transform ${_ggD}ms linear`;ba.style.transform='scaleX(0)';}));_ggS=Date.now();_ggT=setTimeout(_dismissGg,_ggD);el.addEventListener('mouseenter',_pauseGg);el.addEventListener('mouseleave',_resumeGg);}
+function _pauseGg(){if(_ggP)return;_ggP=true;_ggE+=Date.now()-_ggS;clearTimeout(_ggT);_ggT=null;const b=document.getElementById('ggProgressBar');const c=getComputedStyle(b).transform;b.style.transition='none';b.style.transform=c;}
+function _resumeGg(){if(!_ggP)return;_ggP=false;const r=_ggD-_ggE;if(r<=0){_dismissGg();return;}const b=document.getElementById('ggProgressBar');requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.transition=`transform ${r}ms linear`;b.style.transform='scaleX(0)';}));_ggS=Date.now();_ggT=setTimeout(_dismissGg,r);}
+function _dismissGg(){const el=document.getElementById('gestureGuide');if(!el)return;el.classList.remove('visible');_clearGgTimer();el.removeEventListener('mouseenter',_pauseGg);el.removeEventListener('mouseleave',_resumeGg);}
+function _clearGgTimer(){if(_ggT){clearTimeout(_ggT);_ggT=null;}_ggP=false;_ggE=0;}
+const _orig=toggleFeature;
+window.toggleFeature=function(n){const on=activeFeature!==n;if(GUIDED_FEATURES.includes(n)&&on)showGestureGuide(n);else if(!on)_dismissGg();_orig(n);};
+</script>
+</body>
+</html>
