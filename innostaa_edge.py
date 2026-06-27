@@ -37,6 +37,8 @@ import live_video
 import file_opener
 import tempfile
 import webview
+from dotenv import load_env
+loadenv()
 
 _tts_engine = None
 _tts_lock = threading.Lock()
@@ -72,7 +74,7 @@ gesture_video_thread = None
 EXIT_KEYWORDS = ["bye","exit","quit","see you later","good bye","end conversation"]
 UTILITY_KEYWORDS = ["weather", "time", "date", "day","capital", "define", "meaning","solve", "calculate"]
 
-GROQ_API_KEY = "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" # Set your Groq API key in the .env file or environment variables
+GROQ_API_KEY = "-----------------" # Set your Groq API key in the .env file or environment variables
 GROQ_MODEL = "llama-3.1-8b-instant"
 
 SAMPLE_RATE = 16000
